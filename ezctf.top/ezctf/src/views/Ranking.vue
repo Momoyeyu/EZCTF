@@ -1,195 +1,232 @@
 <template>
-<div class="rank">
-  <div class="user-rank">
-    <div class="rank-head">
-    <h1>用户排行榜</h1>
-    </div>
-    <div class="rank-body">
-        <table class="rank-table">
-            <tr v-if="this.fetchMy" class="Myrank-title">
-                <td>我的排名</td>
-                <td>姓名</td>
-                <td>积分</td>
-                <td>上次提交</td>
-            </tr>
-            <tr v-if="this.fetchMy" class="Myrank-body">
-                <td v-if="fetchMy">#{{ fetchMy.rank }}</td>
-                <td>{{ fetchMy.username }}</td>
-                <td>{{ fetchMy.score}}</td>
-                <td>{{ fetchMy.last_commit }}</td>
-            </tr>
-            <tr class="table-title">
-                <td>总排名</td>
-                <td>姓名</td>
-                <td>积分</td>
-                <td>上次提交</td>
-            </tr>
-            <tr v-for="item in sortedUsers" :key="item.rank">
-                <td>#{{ item.rank }}</td>
-                <td>{{ item.username }}</td>
-                <td>{{ item.score }}</td>
-                <td>{{ item.last_commit }}</td>
-            </tr>
-        </table>
-    </div>
+  <div class="ranking-container">
+    <el-card class="box-card">
+      <div slot="header" class="clearfix">
+        <span class="page-title"><i class="el-icon-trophy"></i> 排行榜</span>
+      </div>
+      
+      <el-tabs v-model="activeTab" type="card">
+        <el-tab-pane label="用户排行" name="user">
+          <span slot="label"><i class="el-icon-user"></i> 用户排行</span>
+          
+          <!-- My User Rank -->
+          <el-alert
+            v-if="myUserRank"
+            type="success"
+            :closable="false"
+            class="my-rank-alert"
+            show-icon>
+            <div slot="title">
+              我的排名: #{{ myUserRank.rank }} ({{ myUserRank.score }} pts)
+            </div>
+          </el-alert>
+
+          <el-table
+            :data="users"
+            stripe
+            style="width: 100%"
+            v-loading="loading">
+            <el-table-column
+              prop="rank"
+              label="排名"
+              width="80"
+              align="center">
+              <template slot-scope="scope">
+                <div class="rank-badge" :class="'rank-' + scope.row.rank">
+                  <span v-if="scope.row.rank <= 3"><i class="el-icon-medal"></i></span>
+                  {{ scope.row.rank }}
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="username"
+              label="用户"
+              min-width="180">
+              <template slot-scope="scope">
+                <div class="user-info">
+                   <el-avatar size="small" :src="scope.row.avatar_url || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+                   <span class="username">{{ scope.row.username }}</span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="score"
+              label="积分"
+              width="120"
+              sortable>
+            </el-table-column>
+            <el-table-column
+              prop="last_answer_time"
+              label="最后提交"
+              width="180">
+              <template slot-scope="scope">
+                {{ formatDate(scope.row.last_answer_time) }}
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+
+        <el-tab-pane label="战队排行" name="team">
+          <span slot="label"><i class="el-icon-s-flag"></i> 战队排行</span>
+          
+          <!-- My Team Rank -->
+          <el-alert
+            v-if="myTeamRank"
+            type="info"
+            :closable="false"
+            class="my-rank-alert"
+            show-icon>
+            <div slot="title">
+              我的战队: {{ myTeamRank.team_name }} - 排名: #{{ myTeamRank.rank }} ({{ myTeamRank.score }} pts)
+            </div>
+          </el-alert>
+
+          <el-table
+            :data="teams"
+            stripe
+            style="width: 100%"
+            v-loading="loading">
+            <el-table-column
+              prop="rank"
+              label="排名"
+              width="80"
+              align="center">
+              <template slot-scope="scope">
+                 <div class="rank-badge" :class="'rank-' + scope.row.rank">
+                  <span v-if="scope.row.rank <= 3"><i class="el-icon-medal"></i></span>
+                  {{ scope.row.rank }}
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column
+              prop="team_name"
+              label="战队名称"
+              min-width="180">
+            </el-table-column>
+            <el-table-column
+              prop="member_count"
+              label="人数"
+              width="100">
+            </el-table-column>
+            <el-table-column
+              prop="score"
+              label="总积分"
+              width="120"
+              sortable>
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
   </div>
-  <div class="team-rank">
-    <div class="rank-head">
-    <h1>战队排行榜</h1>
-    </div>
-    <div class="rank-body">
-        <table class="rank-table">
-          <tr v-if="this.fetchMyteam" class="Myrank-title">
-                <td>排名</td>
-                <td>队名</td>
-                <td>队伍人数</td>
-                <td>总积分</td>
-            </tr>
-            <tr v-if="this.fetchMyteam" class="Myrank-body">
-                <td>#{{ fetchMyteam.rank }}</td>
-                <td>{{ fetchMyteam.team_name }}</td>
-                <td>{{ fetchMyteam.member_count}}</td>
-                <td>{{ fetchMyteam.score }}</td>
-            </tr>
-            <tr class="table-title">
-                <td>排名</td>
-                <td>队名</td>
-                <td>队伍人数</td>
-                <td>总积分</td>
-            </tr>
-            <tr v-for="item in sortedTeams" :key="item.team_id">
-                <td>#{{ item.rank }}</td>
-                <td>{{ item.team_name }}</td>
-                <td>{{ item.member_count }}</td>
-                <td>{{ item.score }}</td>
-            </tr>
-        </table>
-    </div>
-  </div>
-</div>
 </template>
 
 <script>
-import axios from 'axios';
-import { mapState } from 'vuex';
+import { getUserRanking, user_profile } from '@/UserSystemApi/UserApi';
+import { getTeamRanking } from '@/UserSystemApi/TeamApi';
+import moment from 'moment';
+
 export default {
-name:'Ranking',
-data(){
-    return{
-        users: [],
-        teams: [],  
+  name: 'Ranking',
+  data() {
+    return {
+      activeTab: 'user',
+      users: [],
+      teams: [],
+      loading: false,
+      currentUser: null,
+      myUserRank: null,
+      myTeamRank: null,
+    };
+  },
+  async created() {
+    await this.fetchData();
+  },
+  methods: {
+    async fetchData() {
+      this.loading = true;
+      try {
+        // Fetch current user info for highlighting
+        try {
+            this.currentUser = await user_profile();
+        } catch (e) {
+            console.warn("Not logged in or failed to fetch profile");
+        }
+
+        const [usersData, teamsData] = await Promise.all([
+          getUserRanking(),
+          getTeamRanking()
+        ]);
+        
+        this.users = usersData;
+        this.teams = teamsData;
+
+        // Find my ranks
+        if (this.currentUser) {
+            this.myUserRank = this.users.find(u => u.username === this.currentUser.username);
+            if (this.currentUser.team_id) {
+                this.myTeamRank = this.teams.find(t => t.team_id === this.currentUser.team_id);
+            }
+        }
+
+      } catch (error) {
+        this.$message.error('获取排行榜失败');
+        console.error(error);
+      } finally {
+        this.loading = false;
+      }
+    },
+    formatDate(dateStr) {
+        if (!dateStr) return '-';
+        return moment(dateStr).format('YYYY-MM-DD HH:mm:ss');
     }
-},
-methods: {  
-    fetchUsersData() {  
-      axios.get('/api/rank/user') 
-        .then(response => {  
-          this.users = response.data.data.user_list;  
-          console.log(this.users);
-        })  
-        .catch(error => {  
-          console.error(error);  
-        });  
-    },
-    fetchTeamsData() {  
-      axios.get('/api/rank/team') 
-        .then(response => {  
-          this.teams = response.data.data.team_list;  
-          console.log(this.teams);
-        })  
-        .catch(error => {  
-          console.error(error);  
-        });  
-    },
-  }, 
-  mounted() {  
-    this.fetchUsersData();  
-    this.fetchTeamsData();  
-  }, 
-computed: {  
-  ...mapState(['isLogin']),
-  ...mapState(['username']),
-  ...mapState(['teamname']),
-  ...mapState(['isLeader']),
-  ...mapState(['isMember']),
-    fetchMy() {  
-      let result = this.sortedUsers.find(obj => obj.username === this.username);   
-      if (result) {  
-        return result;  
-      } else {  
-        return false;  
-      }  
-    },  
-    fetchMyteam() {  
-      let result = this.sortedTeams.find(obj => obj.team_name === this.teamname);  
-      if (result) {  
-        return result;  
-      } else {  
-        return false;  
-      }  
-    }, 
-    sortedUsers() { //页面加载完成后自动对数据进行排序并生成排名
-      return this.users.sort((a, b) => b.score - a.score).map((item, index) => ({  
-        ...item,  
-        rank: index + 1,  
-      }));  
-    }, 
-    sortedTeams() {  
-      return this.teams.sort((a, b) => b.score - a.score).map((item, index) => ({  
-        ...item,  
-        rank: index + 1,  
-      })); 
-    },
-},
-}
+  }
+};
 </script>
 
-<style>
-.rank{
-  width: 1300px;
-  margin: 15px auto;
-  color: #fff;
+<style scoped>
+.ranking-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
 }
-.user-rank{
-    width: 550px;
-    float: left;
-    padding: 8px;
-    background-color: #bbb;
-    border-radius: 10px;
+
+.page-title {
+  font-size: 20px;
+  font-weight: bold;
 }
-.team-rank{
-    width: 550px;
-    float: right;
-    padding: 8px;
-    background-color: #bbb;
-    border-radius: 10px;
+
+.my-rank-alert {
+  margin-bottom: 20px;
 }
-.rank h1 {
-    text-align: center;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    padding-top :20px;
-    padding-bottom :20px;
-    background-color: #1f6feb;
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-.rank-head{
-  width: 100%;
-  background-color: #161b22;
+
+.username {
+    font-weight: 500;
 }
-.rank-body{
-  width: 100%;
-  background-color: #161b22;
+
+.rank-badge {
+    font-weight: bold;
+    color: #606266;
 }
-.rank-table{
-    width: 100%;  
-    border-collapse: collapse;  
+
+.rank-1 {
+    color: #f56c6c;
+    font-size: 1.2em;
 }
-.rank-table tr{
-    border-top: 2px solid #cbc;
+
+.rank-2 {
+    color: #e6a23c;
+    font-size: 1.1em;
 }
-.rank-table td{
-width: 25%;
-text-align: center;
-line-height: 50px;
+
+.rank-3 {
+    color: #409eff;
+    font-size: 1.1em;
 }
 </style>

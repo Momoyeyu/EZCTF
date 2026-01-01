@@ -1,138 +1,114 @@
 <template>
-<div class="question"><button :id="item.task_id" class="trigger" @click="showpopup();fetchData(item.task_id)">
-    <div class="question-left">
-        <div id="question-name" class="question-name">{{ item.task_name }}</div>
-        <div id="question-source" class="question-source">{{ item.src }}</div>
-        <div class="question-message">
-            <div id="question-score" class="question-score">分数：{{ item.points }}</div>
-            <div id="question-amount" class="question-amount">解出人数：{{ item.solve_count }}</div>
+  <el-card class="box-card" shadow="hover" :body-style="{ padding: '0px' }" @click.native="$emit('click', item)">
+    <div class="card-content">
+      <div class="card-left">
+        <div class="card-header">
+          <span class="task-title">{{ item.task_name }}</span>
+          <el-tag size="mini" :type="item.solved ? 'success' : 'info'" effect="dark" class="status-tag">
+            {{ item.solved ? '已解决' : '未解决' }}
+          </el-tag>
         </div>
-    </div>
-    <div class="question-right">
-        <i v-if="item.solved" class="iconfont icon-yiwancheng" :class="['iconfont-green']"></i>
-        <i v-else class="iconfont icon-weiwancheng" :class="['iconfont-white']"></i>
+        <div class="card-meta">
+          <div class="meta-item">
+            <i class="el-icon-trophy"></i> {{ item.points }} pts
+          </div>
+          <div class="meta-item">
+            <i class="el-icon-user"></i> {{ item.solve_count }} solved
+          </div>
+        </div>
       </div>
-</button>
-<Popup :item="item" :Detail="Detail" ref="Popup"/>
-</div>
+      <div class="card-right" :class="{ 'solved': item.solved }">
+        <i :class="item.solved ? 'el-icon-success' : 'el-icon-circle-check'"></i>
+      </div>
+    </div>
+  </el-card>
 </template>
 
 <script>
-import axios from 'axios'
-import Popup from './Popup.vue'
 export default {
-name:'Question',
-components:{ Popup },
-props:{
-    item:{
-      type:Object,
+  name: 'Question',
+  props: {
+    item: {
+      type: Object,
       required: true,
     }
-  },
-data:function(){
-  return{
-    isModalVisible: false,
-    Detail:{},
   }
-},
-methods:{
-  showpopup() {  
-    this.$refs.Popup.showpopup();
-},
-fetchData(param) {
-      axios.get('/api/task/query?action=detail&task_id='+param) // 替换为你的后端API地址  
-        .then(response => {  
-          this.Detail = response.data.data;  
-          console.log(this.Detail);
-        })  
-        .catch(error => {  
-          console.error(error);  
-        });  
-    },  
-}
 }
 </script>
 
-<style>
-.iconfont-green {  
-  color:#238636;
-} 
-.iconfont-white {  
-  color:#fff;
-} 
-.question{
-  margin-left:38px;
-  margin-top:30px;
-  border: 1px solid #5b5959;
-  width: 438px;
-  height: 180px;
-  display: inline-block;
-  background-color: #161b22;
-  border-radius: 15px;
-  padding: 5px;
-}
-.question button{
-  border: 0px;
-  padding: 0px;
+<style scoped>
+.box-card {
+  width: 100%;
   cursor: pointer;
-  background-color:transparent;
+  background-color: #161b22;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  transition: all 0.3s;
+  margin-bottom: 20px;
 }
-.question-left{
-float: left;
-width: 300px;
-height: 180px;
-border-right: 1px solid #5b5959;
+
+.box-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-color: #8b949e;
 }
-.question-name{
-  width: 300px;
-  height: 91px;
-  border-bottom: 1px solid #5b5959;
-  text-align: center;
-  line-height: 90px;
-  color: #fff;
-  font-size: 24px;
+
+.card-content {
+  display: flex;
+  height: 100px;
+}
+
+.card-left {
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.task-title {
+  font-size: 18px;
   font-weight: 600;
-  text-shadow: 0px 6px 13px rgba(0,0,0,.1);
+  color: #58a6ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
-.question-source{
-  width: 300px;
-  height: 44px;
-  border-bottom: 1px solid #5b5959;
-  text-align: center;
-  line-height: 44px;
-  color: #aaa;
+
+.card-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 14px;
+  color: #8b949e;
 }
-.question-message{
-  width: 300px;
-  height: 43px;
-  border-bottom: 1px solid transparent;
-  color: #fff;
+
+.meta-item i {
+  margin-right: 4px;
 }
-.question-score{
-  float: left;
-  width: 149px;
-  border-right: 1px solid #5b5959;
-  text-align: center;
-  line-height: 44px;
+
+.card-right {
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #21262d;
+  font-size: 40px;
+  color: #30363d;
 }
-.question-amount{
-  float: left;
-  width: 150px;
-  text-align: center;
-  line-height: 44px;
+
+.card-right.solved {
+  background-color: #238636;
+  color: #ffffff;
 }
-.question-right{
-float:right;
-width: 137px;
-height: 180px;
-text-align: center;
-line-height: 180px;
-}
-.question-right .iconfont{
-  font-family: "iconfont" !important;
-  font-size: 80px;
-  font-style: normal;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+
+.status-tag {
+  margin-left: 10px;
 }
 </style>

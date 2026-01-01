@@ -1,35 +1,138 @@
-# CTF-Website
-网安实践CTF网站开发
+# EZCTF - Cybersecurity Practice CTF Platform
 
-## 前置学习
-- @reference 参考资料
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.112+-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Vue.js](https://img.shields.io/badge/vue-2.x-green.svg)](https://vuejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg)](https://www.postgresql.org/)
 
-## 项目需求
+[中文文档](README_zh.md) | [English](README.md)
 
-### CTF网站开发
-- 支持Web、Reverse、Pwn等常见题型
-- 从网络收集题目，每类题至少3道，部署到网站上
-- 网站显示战队或个人的排名
-- 实现实名制登陆
-- 网站框架：建议自己实现，可以参考开源框架
+EZCTF is a modern, decoupled CTF (Capture The Flag) competition platform designed for cybersecurity practice courses. This project adopts the latest FastAPI backend architecture and Vue.js frontend framework, implementing complete functionality from challenge management and dynamic container scheduling to real-time rankings.
 
-### 设计Web题目并部署
-- 设计2道Web题目，1易1难
-- 基于docker部署题目到网站
+## ✨ Features
 
-### 报告要求
-- @design 项目设计文档、@test 项目测试文档、@presentation 项目展示文档
-- 可编译的代码
-- @presentation 演示视频，不超过5min
-- @presentation 进展ppt
-- 分工表
+- **Modern Backend**: Built with **FastAPI** (Python 3.12+), integrating **SQLModel** (SQLAlchemy + Pydantic) and **PostgreSQL**.
+- **Responsive Frontend**: Uses **Vue.js** with **Element UI** component library, providing a beautiful and smooth user interaction experience.
+- **Core Functions**:
+    - **Challenge System**: Supports multiple challenge types such as Web, Pwn, Reverse, Crypto, Misc, etc., with attachment downloads.
+    - **Dynamic Environment**: Supports creation and destruction of dynamic container instances (Web/Pwn types).
+    - **Judging System**: Dynamic Flag verification and point settlement.
+    - **Rankings**: Real-time user and team score leaderboards.
+- **User & Team**:
+    - Complete user registration, login (JWT authentication), and personal center.
+    - Team System: Create team, join/leave team, leader management (kick members, transfer leadership).
+- **Engineering Practices**:
+    - **Auto Migrations**: Integrated **Alembic**, automatically synchronizing database structure on service startup.
+    - **Dependency Management**: Backend uses **uv** for extremely fast package management.
+    - **Unit Testing**: Comprehensive Pytest test cases covering core logic.
 
-## 评分标准
-### 整体分布
-- 任务一：40
-- 任务二：50
-- 技术分享：10
-### 任务评分点
-- 项目完成度_PPT（进展报告、验收报告的报告呈现、针对是否自主实现会有提问）
-- 成果展示_实操（包含在验收报告内）
-- 实践报告_docx（模板，关注整体结构、成员分工）
+## 📂 Project Structure
+
+```text
+EZCTF/
+├── backend/                # FastAPI Backend Project
+│   ├── challenges/         # Challenge attachments and Docker env configs
+│   ├── src/                # Backend Source Code
+│   │   ├── common/         # Common Utilities (Security, Error Handling)
+│   │   ├── conf/           # Configuration & Database Connection
+│   │   ├── middleware/     # Middleware (JWT Auth)
+│   │   ├── task/           # Task Module (CRUD, Judging)
+│   │   ├── team/           # Team Module
+│   │   ├── user/           # User Module
+│   │   ├── main.py         # Application Entry Point
+│   │   └── tests/          # Unit Tests
+│   ├── pyproject.toml      # Backend Dependencies
+│   └── ...
+├── ezctf.top/
+│   └── ezctf/              # Vue.js Frontend Project
+│       ├── src/
+│       │   ├── components/ # Vue Components (Element UI)
+│       │   ├── views/      # Page Views
+│       │   ├── UserSystemApi/ # Frontend-Backend Interaction API
+│       │   └── ...
+│       ├── package.json    # Frontend Dependencies
+│       └── ...
+└── README.md               # Project Documentation
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Python 3.12+** & **uv** (Recommended)
+- **Node.js** & **npm**
+- **PostgreSQL** (Default config: Database `ezctf`, User/Password `postgres/postgres`)
+
+### Backend Startup
+
+1.  **Enter Backend Directory**
+    ```bash
+    cd backend
+    ```
+
+2.  **Install Dependencies**
+    ```bash
+    uv sync
+    ```
+
+3.  **Run Application**
+    ```bash
+    # Ensure PostgreSQL is started and configured
+    uv run uvicorn main:app --app-dir src --reload
+    ```
+    API Docs: `http://localhost:8000/docs`
+
+### Frontend Startup
+
+1.  **Enter Frontend Directory**
+    ```bash
+    cd ezctf.top/ezctf
+    ```
+
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Run Dev Server**
+    ```bash
+    npm run serve
+    ```
+    Access: `http://localhost:8080`
+
+## 🛠 Development Guide
+
+### Database Migrations (Backend)
+
+This project uses **Alembic** for database schema migrations.
+
+```bash
+cd backend
+# Generate migration script (after modifying Models)
+uv run alembic revision --autogenerate -m "description"
+
+# Apply migrations manually (automatically executed on service startup)
+uv run alembic upgrade head
+```
+
+### Running Tests
+
+Run Pytest test suite:
+
+```bash
+cd backend
+uv run pytest
+```
+
+## 📄 Original Requirements
+
+### CTF Website Development
+- Support common challenge types like Web, Reverse, Pwn
+- Deploy multiple categories of challenges
+- Team/Individual Rankings
+- Real-name Login
+
+### Report Requirements
+- Design Document, Test Document, Presentation Document
+- Compilable Code, Demo Video

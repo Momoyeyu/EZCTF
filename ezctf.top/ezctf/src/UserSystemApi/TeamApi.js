@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 axios.defaults.withCredentials = true;
-const BASE_URL = 'http://8.130.98.1:8080'; 
+const BASE_URL = 'http://localhost:8000'; 
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -10,17 +10,37 @@ const api = axios.create({
   },
 });
 
+// Add a request interceptor to inject the token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+export const getTeamRanking = async () => {
+  try {
+    const response = await api.get('/api/v1/team/rank');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const createTeam = async (leaderId, teamName, allowJoin) => {
     try {
       const requestData = {
-        action: 'create_team',
-        data: {
-          leader_id: leaderId,
           team_name: teamName,
           allow_join: allowJoin,
-        },
       };
-      const response = await api.post('/api/common/team?action=create_team',requestData); 
+      // Note: leader_id is not needed in request body as it is inferred from current user
+      const response = await api.post('/api/v1/team/',requestData); 
       return response.data;
     } catch (error) {
       throw error;
@@ -31,13 +51,10 @@ export const createTeam = async (leaderId, teamName, allowJoin) => {
 export const joinTeam = async (teamname) => {
   try {
     const requestData = {
-      action: 'join_team',
-      data: {
-        team_name: teamname,
-      },
+      team_name: teamname,
     };
 
-    const response = await api.post('/api/common/team?action=join_team', requestData);
+    const response = await api.post('/api/v1/team/join', requestData);
     return response.data;
   } catch (error) {
     throw error;
@@ -46,10 +63,8 @@ export const joinTeam = async (teamname) => {
 
 export const quitTeam = async () => {
   try {
-    const requestData = {
-      action: 'quit_team',
-    };
-    const response = await api.get(`/api/common/team?action=quit_team`, requestData);
+    const requestData = {};
+    const response = await api.post(`/api/v1/team/quit`, requestData);
     return response.data;
   } catch (error) {
     throw error;
@@ -58,7 +73,16 @@ export const quitTeam = async () => {
 
 export const searchTeam = async (key_word) => {
   try {
-    const response = await api.get(`/api/common/team?action=search_team&keyword=${key_word}`);
+    const response = await api.get(`/api/v1/team/?keyword=${key_word}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const teamDetail = async (teamName) => {
+  try {
+    const response = await api.get(`/api/v1/team/name/${teamName}`);
     return response.data;
   } catch (error) {
     throw error;
@@ -67,123 +91,59 @@ export const searchTeam = async (key_word) => {
 
 export const changeTeamLeader = async (newLeaderName) => {
   try {
-    const requestData = {
-      action: 'change_team_leader',
-      data: {
-          new_leader_name: newLeaderName
-      },
-    };
-
-    const response = await api.put('/api/common/team?action=change_team_leader', requestData);
+    const response = await api.post('/api/v1/team/change_leader', { username: newLeaderName });
     return response.data;
   } catch (error) {
     throw error;
   }
 };
 
+export const kickMember = async (username) => {
+    try {
+        const response = await api.post('/api/v1/team/kick', { username: username });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const changeTeamName = async (newTeamName) => {
+    try {
+        const me = await api.get('/api/v1/user/me');
+        const teamId = me.data.team_id;
+        if (!teamId) throw new Error("No team");
+        
+        const response = await api.patch(`/api/v1/team/${teamId}`, { team_name: newTeamName });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const verifyApply = async (username, allow) => {
+    // Not implemented in backend
+    console.warn("verifyApply not implemented");
+    return {};
+};
+
 export const delete_Team = async (password) => {
   try {
-    const response = await api.delete('/api/common/team?action=del_team', {data:{
-      action: 'del_team',
-      data: {
-        password: password
-      },
-  }});
+    const meResponse = await api.get('/api/v1/user/me');
+    const teamId = meResponse.data.team_id;
+    if (!teamId) {
+        throw new Error("User is not in a team");
+    }
+
+    const response = await api.delete(`/api/v1/team/${teamId}`);
     return response.status;
   } catch (error) {
     throw error;
   }
 };
 
-export const changeTeamName = async (newTeamName) => {
-  try {
-    const requestData = {
-      action: 'change_team_name',
-      data: {
-          new_team_name: newTeamName
-      },
-    };
-
-    const response = await api.put('/api/common/team?action=change_team_name', requestData);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const kickoutMember = async (username) => {
-  try {
-    const requestData = {
-      action: 'kick_out',
-      data: {
-          username: username
-      },
-    };
-
-    const response = await api.post('/api/common/team?action=kick_out', requestData);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const teamDetail = async (teamname) => {
-  try {
-    const response = await api.get(`/api/common/team?action=team_detail&team_name=${teamname}`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const accept = async (name,state) => {
-  try {
-    const requestData = {
-      action: 'accept',
-      data: {
-        inviter: name,
-        accept: state,
-      },
-    };
-
-    const response = await api.post('/api/common/team?action=accept', requestData);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const verifyApply = async (name,state) => {
-  try {
-    const requestData = {
-      action: 'verify_apply',
-      data: {
-        applicant: name,
-        accept: state,
-      },
-    };
-
-    const response = await api.post('/api/common/team?action=verify_apply', requestData);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
 export const Invite = async (name) => {
-  try {
-    const requestData = {
-      action: 'invite',
-      data: {
-        invitee: name,
-        invite_msg: "加入我们吧",
-      },
-    };
-
-    const response = await api.post('/api/common/team?action=invite', requestData);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+   // Not implemented
+   console.warn("Invite not implemented");
+   return {};
 };
 

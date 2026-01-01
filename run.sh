@@ -24,10 +24,10 @@ echo ""
 
 # Start Frontend
 echo "[2/2] Starting Frontend..."
-cd ezctf.top/ezctf
+cd frontend
 chmod +x run.sh
 ./run.sh --background
-cd ../..
+cd ..
 
 echo ""
 echo "========================================"

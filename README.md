@@ -44,15 +44,14 @@ EZCTF/
 │   │   └── tests/          # Unit Tests
 │   ├── pyproject.toml      # Backend Dependencies
 │   └── run.sh              # Backend Standalone Startup Script
-├── ezctf.top/
-│   └── ezctf/              # Vue.js Frontend Project
-│       ├── src/
-│       │   ├── components/ # Vue Components (Element UI)
-│       │   ├── views/      # Page Views
-│       │   ├── UserSystemApi/ # Frontend-Backend Interaction API
-│       │   └── ...
-│       ├── package.json    # Frontend Dependencies
-│       └── run.sh          # Frontend Standalone Startup Script
+├── frontend/               # Vue.js Frontend Project
+│   ├── src/
+│   │   ├── components/     # Vue Components (Element UI)
+│   │   ├── views/          # Page Views
+│   │   ├── UserSystemApi/  # Frontend-Backend Interaction API
+│   │   └── ...
+│   ├── package.json        # Frontend Dependencies
+│   └── run.sh              # Frontend Standalone Startup Script
 ├── run.sh                  # One-click Startup Script
 ├── stop.sh                 # One-click Stop Script
 └── README.md               # Project Documentation
@@ -105,7 +104,7 @@ If you need to debug backend or frontend separately, follow these steps:
 
 1.  **Enter Frontend Directory**
     ```bash
-    cd ezctf.top/ezctf
+    cd frontend
     ```
 
 2.  **Start Service**

@@ -43,15 +43,14 @@ EZCTF/
 │   │   └── tests/          # 单元测试
 │   ├── pyproject.toml      # 后端依赖配置
 │   └── run.sh              # 后端独立启动脚本
-├── ezctf.top/
-│   └── ezctf/              # Vue.js 前端项目
-│       ├── src/
-│       │   ├── components/ # Vue 组件 (Element UI)
-│       │   ├── views/      # 页面视图
-│       │   ├── UserSystemApi/ # 前后端交互 API
-│       │   └── ...
-│       ├── package.json    # 前端依赖配置
-│       └── run.sh          # 前端独立启动脚本
+├── frontend/               # Vue.js 前端项目
+│   ├── src/
+│   │   ├── components/     # Vue 组件 (Element UI)
+│   │   ├── views/          # 页面视图
+│   │   ├── UserSystemApi/  # 前后端交互 API
+│   │   └── ...
+│   ├── package.json        # 前端依赖配置
+│   └── run.sh              # 前端独立启动脚本
 ├── run.sh                  # 项目一键启动脚本
 ├── stop.sh                 # 项目一键停止脚本
 └── README.md               # 项目说明文档
@@ -104,7 +103,7 @@ EZCTF/
 
 1.  **进入前端目录**
     ```bash
-    cd ezctf.top/ezctf
+    cd frontend
     ```
 
 2.  **启动服务**

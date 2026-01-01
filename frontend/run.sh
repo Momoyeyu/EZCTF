@@ -60,9 +60,9 @@ fi
 echo "Starting Vue.js application..."
 
 if [ "$1" == "--background" ]; then
-    mkdir -p ../../logs
+    mkdir -p ../logs
     # Start in background
-    nohup npm run serve > ../../logs/frontend.log 2>&1 &
+    nohup npm run serve > ../logs/frontend.log 2>&1 &
     PID=$!
     echo "Frontend started in background (PID: $PID)"
     echo "Logs: logs/frontend.log"

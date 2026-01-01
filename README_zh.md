@@ -42,7 +42,7 @@ EZCTF/
 │   │   ├── main.py         # 应用入口
 │   │   └── tests/          # 单元测试
 │   ├── pyproject.toml      # 后端依赖配置
-│   └── ...
+│   └── run.sh              # 后端独立启动脚本
 ├── ezctf.top/
 │   └── ezctf/              # Vue.js 前端项目
 │       ├── src/
@@ -51,7 +51,9 @@ EZCTF/
 │       │   ├── UserSystemApi/ # 前后端交互 API
 │       │   └── ...
 │       ├── package.json    # 前端依赖配置
-│       └── ...
+│       └── run.sh          # 前端独立启动脚本
+├── run.sh                  # 项目一键启动脚本
+├── stop.sh                 # 项目一键停止脚本
 └── README.md               # 项目说明文档
 ```
 
@@ -63,40 +65,52 @@ EZCTF/
 - **Node.js** & **npm**
 - **PostgreSQL** (默认配置: 数据库 `ezctf`, 用户/密码 `postgres/postgres`)
 
-### 后端启动
+### 一键启动 (推荐)
+
+项目根目录下提供了便捷的启动与停止脚本：
+
+1.  **启动服务**
+    ```bash
+    ./run.sh
+    ```
+    该脚本会自动检测环境、安装依赖并启动前后端服务。
+    - 后端 API: `http://localhost:8000`
+    - 前端页面: `http://localhost:8080`
+
+2.  **停止服务**
+    ```bash
+    ./stop.sh
+    ```
+
+### 手动启动 (Manual Startup)
+
+如果需要单独调试前后端，可以按照以下步骤操作：
+
+#### Backend 启动
 
 1.  **进入后端目录**
     ```bash
     cd backend
     ```
 
-2.  **安装依赖**
+2.  **启动服务**
     ```bash
-    uv sync
-    ```
-
-3.  **运行应用**
-    ```bash
-    # 确保 PostgreSQL 已启动并配置好
-    uv run uvicorn main:app --app-dir src --reload
+    chmod +x run.sh
+    ./run.sh
     ```
     API 文档地址: `http://localhost:8000/docs`
 
-### 前端启动
+#### Frontend 启动
 
 1.  **进入前端目录**
     ```bash
     cd ezctf.top/ezctf
     ```
 
-2.  **安装依赖**
+2.  **启动服务**
     ```bash
-    npm install
-    ```
-
-3.  **运行开发服务器**
-    ```bash
-    npm run serve
+    chmod +x run.sh
+    ./run.sh
     ```
     访问地址: `http://localhost:8080`
 

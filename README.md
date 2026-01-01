@@ -43,7 +43,7 @@ EZCTF/
 │   │   ├── main.py         # Application Entry Point
 │   │   └── tests/          # Unit Tests
 │   ├── pyproject.toml      # Backend Dependencies
-│   └── ...
+│   └── run.sh              # Backend Standalone Startup Script
 ├── ezctf.top/
 │   └── ezctf/              # Vue.js Frontend Project
 │       ├── src/
@@ -52,7 +52,9 @@ EZCTF/
 │       │   ├── UserSystemApi/ # Frontend-Backend Interaction API
 │       │   └── ...
 │       ├── package.json    # Frontend Dependencies
-│       └── ...
+│       └── run.sh          # Frontend Standalone Startup Script
+├── run.sh                  # One-click Startup Script
+├── stop.sh                 # One-click Stop Script
 └── README.md               # Project Documentation
 ```
 
@@ -64,40 +66,52 @@ EZCTF/
 - **Node.js** & **npm**
 - **PostgreSQL** (Default config: Database `ezctf`, User/Password `postgres/postgres`)
 
-### Backend Startup
+### One-click Start (Recommended)
+
+Convenient startup and stop scripts are provided in the project root directory:
+
+1.  **Start Services**
+    ```bash
+    ./run.sh
+    ```
+    This script automatically checks the environment, installs dependencies, and starts both backend and frontend services.
+    - Backend API: `http://localhost:8000`
+    - Frontend App: `http://localhost:8080`
+
+2.  **Stop Services**
+    ```bash
+    ./stop.sh
+    ```
+
+### Manual Startup
+
+If you need to debug backend or frontend separately, follow these steps:
+
+#### Backend Startup
 
 1.  **Enter Backend Directory**
     ```bash
     cd backend
     ```
 
-2.  **Install Dependencies**
+2.  **Start Service**
     ```bash
-    uv sync
-    ```
-
-3.  **Run Application**
-    ```bash
-    # Ensure PostgreSQL is started and configured
-    uv run uvicorn main:app --app-dir src --reload
+    chmod +x run.sh
+    ./run.sh
     ```
     API Docs: `http://localhost:8000/docs`
 
-### Frontend Startup
+#### Frontend Startup
 
 1.  **Enter Frontend Directory**
     ```bash
     cd ezctf.top/ezctf
     ```
 
-2.  **Install Dependencies**
+2.  **Start Service**
     ```bash
-    npm install
-    ```
-
-3.  **Run Dev Server**
-    ```bash
-    npm run serve
+    chmod +x run.sh
+    ./run.sh
     ```
     Access: `http://localhost:8080`
 

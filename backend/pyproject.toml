@@ -27,6 +27,8 @@ packages = ["src/common", "src/conf", "src/message", "src/task", "src/team", "sr
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "pytest-cov>=5.0.0",
+    "PyYAML>=6.0.0",
 ]
 
 [tool.pytest.ini_options]

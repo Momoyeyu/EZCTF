@@ -80,6 +80,31 @@ def get_teams(
     except erri.BusinessError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
+
+
+@router.post("/join")
+def join_team(
+    join_req: JoinTeamRequest,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        team_service.join_team(session, join_req, current_user)
+        return {"message": "Successfully joined team"}
+    except erri.BusinessError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+
+@router.post("/quit")
+def quit_team(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        team_service.quit_team(session, current_user)
+        return {"message": "Successfully quit team"}
+    except erri.BusinessError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+
 @router.post("/{team_id}", response_model=TeamRead)
 def update_team(
     team_id: int,
@@ -112,28 +137,5 @@ def delete_team(
     try:
         team_service.delete_team(session, team_id, current_user)
         return {"message": "Team dismissed successfully"}
-    except erri.BusinessError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
-@router.post("/join")
-def join_team(
-    join_req: JoinTeamRequest,
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
-):
-    try:
-        team_service.join_team(session, join_req, current_user)
-        return {"message": "Successfully joined team"}
-    except erri.BusinessError as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
-@router.post("/quit")
-def quit_team(
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
-):
-    try:
-        team_service.quit_team(session, current_user)
-        return {"message": "Successfully quit team"}
     except erri.BusinessError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)

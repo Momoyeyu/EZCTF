@@ -32,7 +32,7 @@ def test_login_user(monkeypatch):
     def mock_create_access_token(subject):
         return "fake-token"
 
-    monkeypatch.setattr(service, "authenticate", mock_authenticate)
+    monkeypatch.setattr(service, "login_user", mock_authenticate)
     # We need to mock create_access_token where it is imported in the router or used
     # Assuming the router uses security.create_access_token
     from common import security
@@ -80,7 +80,7 @@ def test_delete_me_authorized(monkeypatch):
         
     monkeypatch.setattr(service, "delete_user", mock_delete_user)
     
-    response = client.delete("/api/v1/user/me", headers={"Authorization": "Bearer fake-token"})
+    response = client.post("/api/v1/user/me/delete", headers={"Authorization": "Bearer fake-token"})
     assert response.status_code == 200
     assert deleted_ids == [1]
     assert response.json()["message"] == "User deleted successfully"

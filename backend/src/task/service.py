@@ -1,9 +1,13 @@
 from datetime import datetime, timezone
 from typing import List, Optional
+import os
 from sqlmodel import Session, select
 from task.model import Task, Solved
-from task.schema import TaskCreate, TaskUpdate
+from task.schema import TaskCreate, TaskUpdate, TaskRead
+from user.model import User
 from common import erri
+
+CHALLENGE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "challenges")
 
 def create_task(session: Session, task_create: TaskCreate) -> Task:
     db_task = Task.model_validate(task_create)
@@ -21,17 +25,38 @@ def get_task(session: Session, task_id: int) -> Task:
 def get_tasks(session: Session, offset: int = 0, limit: int = 100, category: Optional[str] = None) -> List[Task]:
     statement = select(Task)
     if category:
-        # Match category name or integer value if possible
-        # Since category is str in model but used as enum often.
-        # Let's assume input is string name like "WEB" or "2"
-        # If model stores string "WEB", we match directly.
-        # If model stores int 2, we cast.
-        # Current model: category: Optional[str] = None. 
-        # But test used category="WEB".
-        # Let's just filter by exact string match for now.
         statement = statement.where(Task.category == category)
         
     return session.exec(statement.offset(offset).limit(limit)).all()
+
+def get_tasks_for_user(session: Session, user: User, category: Optional[str] = None) -> List[TaskRead]:
+    tasks = get_tasks(session, category=category)
+    
+    solved_statement = select(Solved.task_id).where(Solved.user_id == user.id)
+    solved_task_ids = set(session.exec(solved_statement).all())
+    
+    result = []
+    for task in tasks:
+        if not task.is_visible and not user.is_superuser:
+            continue
+            
+        task_read = TaskRead.model_validate(task)
+        task_read.solved = task.id in solved_task_ids
+        result.append(task_read)
+        
+    return result
+
+def get_task_detail_for_user(session: Session, user: User, task_id: int) -> TaskRead:
+    task = get_task(session, task_id)
+    
+    if not task.is_visible and not user.is_superuser:
+        raise erri.not_found("Task not found")
+    
+    task_read = TaskRead.model_validate(task)
+    solved_entry = session.exec(select(Solved).where(Solved.task_id == task_id, Solved.user_id == user.id)).first()
+    task_read.solved = True if solved_entry else False
+    
+    return task_read
 
 def update_task(session: Session, task_id: int, task_update: TaskUpdate) -> Task:
     db_task = get_task(session, task_id)
@@ -89,3 +114,14 @@ def submit_flag(session: Session, task_id: int, flag: str, user_id: int) -> bool
         return True
     else:
         return False
+
+def get_attachment_path(session: Session, task_id: int) -> str:
+    task = get_task(session, task_id)
+    if not task.annex:
+        raise erri.not_found("No attachment found")
+        
+    file_path = os.path.join(CHALLENGE_DIR, task.annex)
+    if not os.path.exists(file_path):
+        raise erri.not_found("File not found on server")
+        
+    return file_path

@@ -1,10 +1,23 @@
 from datetime import datetime, timezone
 from typing import List, Optional
-from sqlmodel import Session, select, func
+from sqlmodel import Session, select, func, desc
 from team.model import Team
-from team.schema import TeamCreate, TeamUpdate, TeamDetail, JoinTeamRequest
+from team.schema import TeamCreate, TeamUpdate, TeamDetail, JoinTeamRequest, TeamRank
 from user.model import User
 from common import erri
+
+def get_ranking(session: Session) -> List[TeamRank]:
+    teams = session.exec(select(Team).order_by(desc(Team.score), Team.created_at)).all()
+    rank_list = []
+    for i, team in enumerate(teams):
+        rank_list.append(TeamRank(
+            rank=i+1,
+            team_id=team.id,
+            team_name=team.team_name,
+            member_count=team.member_count,
+            score=team.score
+        ))
+    return rank_list
 
 def create_team(session: Session, team_create: TeamCreate, user: User) -> Team:
     # Check if user already in team
@@ -39,6 +52,27 @@ def get_team(session: Session, team_id: int) -> Team:
     if not team:
         raise erri.not_found("Team not found")
     return team
+
+def get_team_by_name(session: Session, team_name: str) -> TeamDetail:
+    statement = select(Team).where(Team.team_name == team_name)
+    team = session.exec(statement).first()
+    if not team:
+        raise erri.not_found("Team not found")
+    
+    # Calculate rank (mock)
+    rank = 1 
+    
+    return TeamDetail(
+        id=team.id,
+        team_name=team.team_name,
+        description=team.description,
+        allow_join=team.allow_join,
+        leader_id=team.leader_id,
+        score=team.score,
+        created_at=team.created_at,
+        member_count=len(team.members),
+        rank=rank
+    )
 
 def get_teams(session: Session, offset: int = 0, limit: int = 100, keyword: Optional[str] = None) -> List[Team]:
     statement = select(Team)
@@ -98,7 +132,7 @@ def delete_team(session: Session, team_id: int, user: User):
 
 def join_team(session: Session, join_req: JoinTeamRequest, user: User):
     if user.team_id:
-        raise erri.bad_request("User is already in a team")
+        raise erri.bad_request("You are already in a team")
         
     statement = select(Team).where(Team.team_name == join_req.team_name)
     team = session.exec(statement).first()
@@ -111,73 +145,50 @@ def join_team(session: Session, join_req: JoinTeamRequest, user: User):
     user.team_id = team.id
     session.add(user)
     session.commit()
-    
+
 def quit_team(session: Session, user: User):
     if not user.team_id:
-        raise erri.bad_request("User is not in a team")
+        raise erri.bad_request("You are not in a team")
         
     team = get_team(session, user.team_id)
     if team.leader_id == user.id:
-        raise erri.bad_request("Leader cannot quit team, must dismiss it")
+        raise erri.bad_request("Leader cannot quit team. Change leader or dismiss team.")
         
     user.team_id = None
     session.add(user)
     session.commit()
 
-def kick_member(session: Session, team_id: int, member_username: str, user: User):
+def kick_member(session: Session, team_id: int, username: str, leader: User):
     team = get_team(session, team_id)
-    if team.leader_id != user.id and not user.is_superuser:
-        raise erri.forbidden("Only leader can kick members")
     
-    statement = select(User).where(User.username == member_username)
+    if team.leader_id != leader.id:
+        raise erri.forbidden("Only leader can kick members")
+        
+    statement = select(User).where(User.username == username, User.team_id == team_id)
     member = session.exec(statement).first()
+    
     if not member:
-        raise erri.not_found("User not found")
+        raise erri.not_found("Member not found in team")
         
-    if member.team_id != team.id:
-        raise erri.bad_request("User is not in this team")
-        
-    if member.id == user.id:
+    if member.id == leader.id:
         raise erri.bad_request("Cannot kick yourself")
         
     member.team_id = None
     session.add(member)
     session.commit()
 
-def change_leader(session: Session, team_id: int, new_leader_username: str, user: User):
+def change_leader(session: Session, team_id: int, username: str, current_leader: User):
     team = get_team(session, team_id)
-    if team.leader_id != user.id and not user.is_superuser:
+    
+    if team.leader_id != current_leader.id:
         raise erri.forbidden("Only leader can change leader")
         
-    statement = select(User).where(User.username == new_leader_username)
+    statement = select(User).where(User.username == username, User.team_id == team_id)
     new_leader = session.exec(statement).first()
+    
     if not new_leader:
-        raise erri.not_found("User not found")
-        
-    if new_leader.team_id != team.id:
-        raise erri.bad_request("New leader must be a member of the team")
+        raise erri.not_found("Member not found in team")
         
     team.leader_id = new_leader.id
     session.add(team)
     session.commit()
-
-def get_team_by_name(session: Session, team_name: str) -> TeamDetail:
-    statement = select(Team).where(Team.team_name == team_name)
-    team = session.exec(statement).first()
-    if not team:
-        raise erri.not_found("Team not found")
-    
-    # Calculate rank (mock)
-    rank = 1
-    
-    return TeamDetail(
-        id=team.id,
-        team_name=team.team_name,
-        description=team.description,
-        allow_join=team.allow_join,
-        leader_id=team.leader_id,
-        score=team.score,
-        created_at=team.created_at,
-        member_count=len(team.members),
-        rank=rank
-    )

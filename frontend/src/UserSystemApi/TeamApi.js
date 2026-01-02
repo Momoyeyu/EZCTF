@@ -113,7 +113,7 @@ export const changeTeamName = async (newTeamName) => {
         const teamId = me.data.team_id;
         if (!teamId) throw new Error("No team");
         
-        const response = await api.patch(`/api/v1/team/${teamId}`, { team_name: newTeamName });
+        const response = await api.post(`/api/v1/team/${teamId}`, { team_name: newTeamName });
         return response.data;
     } catch (error) {
         throw error;
@@ -134,7 +134,7 @@ export const delete_Team = async (password) => {
         throw new Error("User is not in a team");
     }
 
-    const response = await api.delete(`/api/v1/team/${teamId}`);
+    const response = await api.post(`/api/v1/team/${teamId}/delete`);
     return response.status;
   } catch (error) {
     throw error;

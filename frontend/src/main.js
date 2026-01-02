@@ -12,7 +12,7 @@ Vue.use(Vuex);
 Vue.use(VueCookies)
 Vue.use(ElementUI);
 Vue.config.productionTip = false
-axios.defaults.baseURL="http://localhost:8000"
+axios.defaults.baseURL = process.env.VUE_APP_BACKEND_URL || "http://localhost:8000"
 const store = new Vuex.Store({
   state: {
     loginButtonEnabled: localStorage.getItem('LBE') === "false" ? false : true,

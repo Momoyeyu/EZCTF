@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 axios.defaults.withCredentials = true;
-const BASE_URL = 'http://localhost:8000'; 
+const BASE_URL = process.env.VUE_APP_BACKEND_URL || 'http://localhost:8000'; 
 
 const api = axios.create({
   baseURL: BASE_URL,

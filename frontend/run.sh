@@ -48,8 +48,8 @@ else
     echo "node_modules exists. Skipping npm install."
 fi
 
-# 3. Check for existing process on port 8080 and kill it
-PORT=8080
+# 3. Check for existing process on port and kill it
+PORT=${PORT:-8080}
 PIDS=$(lsof -t -i:$PORT 2>/dev/null || true)
 if [ -n "$PIDS" ]; then
     echo "Port $PORT is already in use by PID(s): $PIDS. Killing..."
@@ -62,12 +62,12 @@ echo "Starting Vue.js application..."
 if [ "$1" == "--background" ]; then
     mkdir -p ../logs
     # Start in background
-    nohup npm run serve > ../logs/frontend.log 2>&1 &
+    nohup npm run serve -- --port $PORT > ../logs/frontend.log 2>&1 &
     PID=$!
     echo "Frontend started in background (PID: $PID)"
     echo "Logs: logs/frontend.log"
 else
-    npm run serve
+    npm run serve -- --port $PORT
 fi
 
 echo "Frontend Service URL: http://localhost:$PORT"

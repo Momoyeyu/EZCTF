@@ -11,6 +11,11 @@ command_exists() {
 
 echo "=== Backend Setup & Start ==="
 
+# Load environment variables from .env if it exists
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
 # 1. Check and Install uv
 if ! command_exists uv; then
     echo "uv not found. Installing uv..."
@@ -36,8 +41,9 @@ fi
 echo "Syncing dependencies with uv..."
 uv sync
 
-# 3. Check for existing process on port 8000 and kill it
-PORT=8000
+# 3. Check for existing process on port and kill it
+PORT=${PORT:-8000}
+HOST=${HOST:-0.0.0.0}
 PIDS=$(lsof -t -i:$PORT 2>/dev/null || true)
 if [ -n "$PIDS" ]; then
     echo "Port $PORT is already in use by PID(s): $PIDS. Killing..."

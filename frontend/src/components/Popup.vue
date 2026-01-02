@@ -225,7 +225,7 @@ export default {
         localStorage.removeItem('countdown' + this.item.task_id);
         localStorage.removeItem('ipandport' + this.item.task_id);
         
-        axios.delete(`/api/v1/task/${this.item.task_id}/container`)
+        axios.post(`/api/v1/task/${this.item.task_id}/container/delete`)
         .then(() => {
             this.$message.info("环境已销毁");
         })

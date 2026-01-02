@@ -63,7 +63,7 @@ def get_task(
     
     return task_read
 
-@router.patch("/{task_id}", response_model=TaskRead)
+@router.post("/{task_id}", response_model=TaskRead)
 def update_task(
     task_id: int,
     task_update: TaskUpdate,
@@ -72,7 +72,7 @@ def update_task(
 ):
     return task_service.update_task(session, task_id, task_update)
 
-@router.delete("/{task_id}")
+@router.post("/{task_id}/delete")
 def delete_task(
     task_id: int,
     session: Session = Depends(get_session),
@@ -97,18 +97,12 @@ def download_attachment(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    task = task_service.get_task(session, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    
-    if not task.annex:
-        raise HTTPException(status_code=404, detail="No attachment for this task")
-        
-    file_path = os.path.join(CHALLENGE_DIR, task.annex)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Attachment file not found on server")
-        
-    return FileResponse(file_path, filename=task.annex)
+    try:
+        file_path = task_service.get_attachment_path(session, task_id)
+        filename = os.path.basename(file_path)
+        return FileResponse(file_path, filename=filename)
+    except erri.BusinessError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 @router.post("/{task_id}/container")
 def create_container(
@@ -118,20 +112,17 @@ def create_container(
 ):
     # Mock implementation for frontend compatibility
     # In a real scenario, this would spin up a Docker container
-    task = task_service.get_task(session, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    try:
+        task = task_service.get_task(session, task_id)
+        # Check if task type supports container (Web/Pwn)
         
-    # Check if task type supports container (Web/Pwn)
-    # Using hardcoded check for now or based on category
-    # Assuming Web=2, Pwn=4
-    # if task.category not in ["Web", "Pwn"]: ...
-    
-    import random
-    port = random.randint(20000, 30000)
-    return {"host": "127.0.0.1", "port": port}
+        import random
+        port = random.randint(20000, 30000)
+        return {"host": "127.0.0.1", "port": port}
+    except erri.BusinessError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
 
-@router.delete("/{task_id}/container")
+@router.post("/{task_id}/container/delete")
 def delete_container(
     task_id: int,
     session: Session = Depends(get_session),

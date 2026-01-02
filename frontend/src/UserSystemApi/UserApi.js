@@ -1,6 +1,6 @@
 import axios from 'axios';
 axios.defaults.withCredentials = true;
-const BASE_URL = 'http://localhost:8000'; 
+const BASE_URL = process.env.VUE_APP_BACKEND_URL || 'http://localhost:8000'; 
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -79,7 +79,7 @@ export const modifyUserInfo = async (old_username,new_username,password) => {
     if (new_username) requestData.nickname = new_username; 
     if (password) requestData.password = password;
 
-    const response = await api.patch('/api/v1/user/me', requestData);
+    const response = await api.post('/api/v1/user/me', requestData);
     return response.data;
   } catch (error) {
     throw error;
@@ -97,7 +97,7 @@ export const deleteUserInfo = async (password) => {
      // Verify password first if needed, but for now just delete
      // Ideally we should ask for password to confirm.
      // Backend doesn't support password verification on delete yet, so just delete.
-     const response = await api.delete('/api/v1/user/me');
+     const response = await api.post('/api/v1/user/me/delete');
      return response.data;
    } catch (error) {
      throw error;

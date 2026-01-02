@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Depends, Request
 from sqlmodel import Session
 
@@ -11,7 +12,7 @@ def get_current_user(
     session: Session = Depends(get_session)
 ) -> User:
     user_id = get_current_user_id(request)
-    user = session.get(User, user_id)
+    user: Optional[User] = session.get(User, user_id)
     if not user:
         raise erri.not_found("User not found")
     return user

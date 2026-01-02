@@ -146,7 +146,7 @@ def test_delete_team(client, session: Session):
     )
     
     # Leader deletes team
-    response = client.delete(f"/api/v1/team/{team_id}", headers=get_auth_headers(leader))
+    response = client.post(f"/api/v1/team/{team_id}/delete", headers=get_auth_headers(leader))
     assert response.status_code == 200
     
     # Verify team is gone

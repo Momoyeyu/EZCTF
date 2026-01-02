@@ -20,7 +20,7 @@ def get_password_hash(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return get_password_hash(plain_password) == hashed_password
 
-def create_access_token(subject: str | Any) -> str:
+def create_access_token(subject: Any) -> str:
     now = int(time.time())
     payload = {
         "sub": str(subject),

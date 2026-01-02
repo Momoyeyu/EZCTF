@@ -1,9 +1,8 @@
-from typing import Optional
-from sqlmodel import Session, select
+from typing import Optional, List
+from sqlmodel import Session, select, desc
 from user.model import User
-from user.schema import UserCreate, UserResponse, UserUpdate
+from user.schema import UserCreate, UserResponse, UserUpdate, UserRank
 from common import security, erri
-from datetime import datetime, timezone
 
 def get_by_username(session: Session, username: str) -> Optional[User]:
     statement = select(User).where(User.username == username)
@@ -12,6 +11,18 @@ def get_by_username(session: Session, username: str) -> Optional[User]:
 def get_by_email(session: Session, email: str) -> Optional[User]:
     statement = select(User).where(User.email == email)
     return session.exec(statement).first()
+
+def get_ranking(session: Session) -> List[UserRank]:
+    users = session.exec(select(User).order_by(desc(User.score), User.last_answer_time)).all()
+    rank_list = []
+    for i, user in enumerate(users):
+        rank_list.append(UserRank(
+            rank=i+1,
+            username=user.username,
+            score=user.score,
+            last_answer_time=user.last_answer_time
+        ))
+    return rank_list
 
 def create_user(session: Session, user_create: UserCreate) -> User:
     if get_by_username(session, user_create.username):
@@ -26,13 +37,13 @@ def create_user(session: Session, user_create: UserCreate) -> User:
     session.refresh(db_user)
     return db_user
 
-def authenticate(session: Session, username: str, password: str) -> Optional[User]:
+def login_user(session: Session, username: str, password: str) -> str:
     user = get_by_username(session, username)
     if not user:
-        return None
+        raise erri.unauthorized("Incorrect username or password")
     if not security.verify_password(password, user.hashed_password):
-        return None
-    return user
+        raise erri.unauthorized("Incorrect username or password")
+    return security.create_access_token(user.id)
 
 def get_user_profile(session: Session, user_id: int) -> UserResponse:
     user = session.get(User, user_id)
